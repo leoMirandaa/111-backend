@@ -65,6 +65,27 @@ def register():
     return jsonify({"message": "user registered successfully"}), 201
 
 
+@app.post("/api/login")
+def login():
+    data = request.get_json()
+    username = data.get("username")
+    password = data.get("password")
+
+    conn = sqlite3.connect(DB_NAME)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM users WHERE username=?", (username,))
+    user = cursor.fetchone()
+    conn.close()
+    
+    if user and user["password"] == password:
+        return jsonify({"user_id": user["id"], "username": user["username"]}), 200
+    else:
+        return jsonify({"error": "Invalid credentials"}), 401
+
+
+
 # http://127.0.0.1:5000/api/users/3
 @app.get("/api/users/<int:user_id>")
 def get_user(user_id):
@@ -78,6 +99,8 @@ def get_user(user_id):
 
     return jsonify({"id": row["id"], "username": row["username"]}), 200
 
+
+# --- Session #2 ---
 
 # http://127.0.0.1:5000/api/users/2
 @app.put("/api/users/<int:user_id>") # Flask
@@ -164,6 +187,120 @@ def create_expense():
 
     return jsonify({"message": "Expense added successfully"}), 201
 
+
+@app.get("/api/expenses/<int:expense_id>")
+def get_expense(expense_id):
+    conn = sqlite3.connect(DB_NAME)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT * FROM expenses WHERE id=?", (expense_id,))
+    row = cursor.fetchone()
+    conn.close()
+
+    if not row:
+        conn.close()
+        return jsonify({"message": "Expense not found"}), 404
+    
+
+    print(f"row values: {row}")
+
+    if row:
+        expense = {
+            "id": row["id"],
+            "title": row["title"],
+            "description": row["description"],
+            "amount": row["amount"],
+            "date": row["date"],
+            "category": row["category"],
+            "user_id": row["user_id"]
+        }
+        return jsonify(expense)
+    else:
+        return jsonify({"error": "Expense not found"}), 404
+
+
+# Mini-challenge: delete a expense by id
+@app.delete("/api/expenses/<int:expense_id>")
+def delete_expense(expense_id):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM expenses WHERE id=?", (expense_id,))
+    if not cursor.fetchone():
+        conn.close()
+        return jsonify({"message": "Expense not found"}), 404
+    
+    cursor.execute("DELETE FROM expenses WHERE id=?", (expense_id,))
+    conn.commit()
+    conn.close()
+
+    return jsonify({"message": "Expense deleted successfully"}), 200
+
+
+@app.put("/api/expenses/<int:expense_id>")
+def update_expense(expense_id):
+    data = request.get_json()
+    title = data.get("title")
+    description = data.get("description")
+    amount = data.get("amount")
+    category = data.get("category")
+
+    allowed_categories = {"Food", "Education", "Entertainment"}
+    if category not in allowed_categories:
+        return jsonify({"error": "Invalid category"}), 400
+
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM expenses WHERE id=?", (expense_id,))
+    if not cursor.fetchone():
+        conn.close()
+        return jsonify({"message": "Expense not found"}), 404
+
+    cursor.execute("""
+        UPDATE expenses
+        SET title=?, description=?, amount=?, category=?
+        WHERE id=?
+    """, (title, description, amount, category, expense_id))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({"message": "Expense updated successfully"})
+
+
+# Mini-chanllenge: get all the expenses
+@app.get('/api/expenses')
+def get_expenses():
+    # http://127.0.0.1:5000/api/expenses?user_id=3
+    user_id = request.args.get("user_id")
+
+    conn = sqlite3.connect(DB_NAME)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    if user_id:
+        cursor.execute("SELECT * FROM expenses where user_id=?", (user_id))
+    else:
+        cursor.execute("SELECT * from expenses")
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    result = []
+    for row in rows:
+        result.append({
+            "id": row["id"],
+            "title": row["title"],
+            "description": row["description"],
+            "amount": row["amount"],
+            "date": row["date"],
+            "category": row["category"],
+            "user_id": row["user_id"]
+        })
+
+    return jsonify(result), 200
 
 
 if __name__ == "__main__":
