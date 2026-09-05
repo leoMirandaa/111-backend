@@ -1,14 +1,39 @@
------- Create venv ------
-Macos: python3 -m venv venv
-Windows: py/python -m venv venv
+---- Create venv ----
+WIN: py/python -m venv venv
+MAC: python3 -m venv venv
 
------- Activate venv ------
-Macos: source venv/bin/activate
-Windows: venv\Scripts\activate
+---- Activate venv ----
+WIN: venv\Scripts\activate
+MAC: source venv/bin/activate
 
------- Install Flask ------
-pip install Flask
+---- Install Flask ----
+WIN: pip install Flask
+MAC: pip install Flask
 
------- Run server.py file ------
-Macos: python3 server.py
-Windows: py/python server.py
+
+---- Run server ----
+WIN: py/python server.py
+MAC: python3 server.py
+
+
+    {
+        "id": "1",
+        "title": "Nintendo Switch",
+        "price": 499.99,
+        "category": "Electroincs",
+        "image": "https://picsum.photos/300/200?random=1"
+    },
+    {
+        "id": "2",
+        "title": "Smart Refrigerator",
+        "price": 999.99,
+        "category": "Kitchen",
+        "image": "https://picsum.photos/300/200?random=1"
+    },
+    {
+        "id": "3",
+        "title": "Bluetooth Speaker",
+        "price": 79.99,
+        "category": "Electronics",
+        "image": "https://picsum.photos/300/200?random=1"
+    }
